@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Run your own SEZ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+      button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.75rem; }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+      :root {
+        color-scheme: light dark;
+        --bg: #f6f1e5;
+        --surface: #fffdf6;
+        --surface-2: #efe8d6;
+        --ink: #1c2a20;
+        --ink-soft: #4c5a4e;
+        --line: #d8cfb8;
+        --green: #173d28;
+        --green-deep: #0f2c1c;
+        --green-ink: #f3ecd9;
+        --gold: #a97e14;
+        --gold-text: #7a5c0d;
+        --gold-bright: #d9a92b;
+        --seal: #b23a2a;
+        --seal-soft: #f6e3de;
+        --good: #1e6b3c;
+        --hero-soft: #cfd6c4;
+        --shadow: 0 1px 2px rgba(28, 42, 32, .06), 0 8px 24px rgba(28, 42, 32, .06);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0d1811;
+          --surface: #152219;
+          --surface-2: #1b2c20;
+          --ink: #ece4cf;
+          --ink-soft: #a9b3a2;
+          --line: #31473a;
+          --green: #1d4a31;
+          --green-deep: #0a1f13;
+          --green-ink: #f3ecd9;
+          --gold: #d9a92b;
+          --gold-text: #eec95e;
+          --gold-bright: #eec95e;
+          --seal: #e0684f;
+          --seal-soft: #3a2320;
+          --good: #6fce8f;
+          --hero-soft: #a9b3a2;
+          --shadow: 0 1px 2px rgba(0, 0, 0, .2), 0 8px 24px rgba(0, 0, 0, .35);
+        }
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px 64px; }
+      h1, h2, h3, .serif { font-family: "Noto Serif SC", "Songti SC", Georgia, serif; }
+      h2 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 8px; font-weight: 600; }
+      h3 { font-size: 1.12rem; margin: 0 0 8px; font-weight: 600; }
+      p { margin: 0 0 12px; }
+      .soft { color: var(--ink-soft); }
+      .small { font-size: .86rem; }
+
+      /* ---------- hero ---------- */
+      .hero {
+        background: var(--green-deep);
+        color: var(--green-ink);
+        margin: 0 -20px;
+        padding: 40px 24px 32px;
+        border-bottom: 4px solid var(--gold-bright);
+      }
+      .hero-plate { margin: 0 0 24px; }
+      .hero-plate img {
+        display: block; width: 100%; height: auto; border-radius: 12px;
+        border: 1px solid rgba(238, 201, 94, .35);
+      }
+      .hero .place-line {
+        font-size: .85rem;
+        color: var(--gold-bright); font-weight: 600; margin-bottom: 12px;
+      }
+      .hero h1 { font-size: 2.5rem; line-height: 1.12; margin: 0 0 12px; font-weight: 600; }
+      .hero .claim { font-family: "Noto Serif SC", Georgia, serif; font-size: 1.22rem; line-height: 1.45; margin-bottom: 12px; }
+      .hero .claim strong { color: var(--gold-bright); font-weight: 700; }
+      .hero p { color: var(--hero-soft); max-width: 56ch; }
+      .hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 24px 0; }
+      .hero-stats span {
+        color: var(--hero-soft);
+        font-size: .82rem; font-weight: 400; line-height: 1.4;
+        border-left: 1px solid rgba(238, 201, 94, .35); padding-left: 12px;
+      }
+      .hero-stats span:first-child { border-left: 0; padding-left: 0; }
+      .hero-stats b {
+        display: block; color: var(--gold-bright);
+        font-family: "Noto Serif SC", Georgia, serif; font-size: 1.3rem; font-weight: 600;
+        font-variant-numeric: tabular-nums; line-height: 1.2;
+      }
+      .btn {
+        appearance: none; border: 0; cursor: pointer; font: inherit; font-weight: 600;
+        border-radius: 10px; padding: 12px 20px; min-height: 48px;
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        text-decoration: none; text-align: center;
+        transition: background-color 160ms cubic-bezier(0.22, 1, 0.36, 1),
+          border-color 160ms cubic-bezier(0.22, 1, 0.36, 1),
+          color 160ms cubic-bezier(0.22, 1, 0.36, 1),
+          transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .btn:active { transform: scale(.98); }
+      .btn-gold { background: var(--gold-bright); color: #231a02; }
+      .btn-ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
+      .btn-soft { background: var(--surface-2); color: var(--ink); border: 1.5px solid var(--line); }
+      .btn[disabled] { opacity: .55; cursor: wait; }
+
+      section { padding-top: 48px; }
+      .step-tag {
+        display: block; font-size: .85rem; font-weight: 600;
+        color: var(--gold-text); margin-bottom: 8px;
+        border-top: 1.5px dashed var(--gold); padding-top: 12px;
+      }
+
+      /* ---------- mirror cards ---------- */
+      .mirror { display: grid; gap: 16px; }
+      @media (min-width: 620px) { .mirror { grid-template-columns: 1fr 1fr; } }
+      .card {
+        background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+        padding: 20px; box-shadow: var(--shadow);
+      }
+      .card .when { font-weight: 600; color: var(--seal); font-size: .85rem; }
+      .card .big { font-family: "Noto Serif SC", Georgia, serif; font-size: 1.35rem; font-weight: 600; margin: 4px 0 8px; }
+      .clause {
+        border-left: 3px solid var(--seal); background: var(--seal-soft);
+        padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 12px 0 4px; font-size: .94rem;
+      }
+      .clause.gold { border-left-color: var(--gold); background: var(--surface-2); }
+      blockquote {
+        margin: 24px 0 0; padding: 20px; background: var(--surface-2);
+        border-radius: 16px; border: 1px solid var(--line);
+      }
+      blockquote p { font-family: "Noto Serif SC", Georgia, serif; font-size: 1.12rem; font-weight: 600; line-height: 1.55; margin-bottom: 8px; }
+      blockquote cite { font-style: normal; font-size: .85rem; color: var(--ink-soft); }
+
+      /* ---------- pickers ---------- */
+      .zones { display: grid; gap: 12px; }
+      @media (min-width: 620px) { .zones { grid-template-columns: 1fr 1fr; } }
+      .zone, .opt {
+        appearance: none; text-align: left; font: inherit; cursor: pointer; width: 100%;
+        background: var(--surface); color: var(--ink);
+        border: 1.5px solid var(--line); border-radius: 12px; padding: 16px;
+        transition: background-color 160ms cubic-bezier(0.22, 1, 0.36, 1),
+          border-color 160ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .zone .zname { font-family: "Noto Serif SC", Georgia, serif; font-weight: 600; font-size: 1.18rem; display: block; }
+      .zone .zsub { font-size: .87rem; color: var(--ink-soft); display: block; margin-top: 2px; }
+      .zone[aria-pressed="true"], .opt[aria-pressed="true"] {
+        border-color: var(--gold); background: var(--surface-2);
+      }
+      .zone[aria-pressed="true"] .zname::after { content: " · your zone"; color: var(--gold-text); font-size: .8rem; font-family: "Noto Sans SC", sans-serif; font-weight: 600; }
+
+      .rule { margin-bottom: 24px; }
+      .rule-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+      .rule-num {
+        flex: none; width: 28px; height: 28px; border-radius: 50%;
+        background: var(--green); color: var(--green-ink);
+        display: inline-flex; align-items: center; justify-content: center;
+        font-weight: 600; font-size: .9rem; align-self: center;
+      }
+      .rule-opts { display: grid; gap: 12px; }
+      @media (min-width: 620px) { .rule-opts { grid-template-columns: 1fr 1fr; } }
+      .opt .otag { font-size: .8rem; font-weight: 600; color: var(--ink-soft); display: block; margin-bottom: 4px; }
+      .opt .otitle { font-weight: 600; display: block; font-size: 1rem; line-height: 1.35; }
+      .opt .osub { font-size: .86rem; color: var(--ink-soft); display: block; margin-top: 3px; line-height: 1.45; }
+      .opt[aria-pressed="true"] .otag { color: var(--gold-text); }
+      .preset-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+      .preset-row .btn { flex: 1 1 200px; }
+
+      /* ---------- stage ---------- */
+      .stage {
+        background: var(--green-deep); border-radius: 16px; overflow: hidden;
+        border: 1px solid var(--green); box-shadow: var(--shadow);
+      }
+      .stage-head {
+        display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px;
+        padding: 16px 16px 4px; color: var(--green-ink);
+      }
+      .stage-head .phase { font-family: "Noto Serif SC", Georgia, serif; font-weight: 600; font-size: 1.08rem; }
+      .stage-head .year { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--gold-bright); font-size: 1.3rem; }
+      .stage svg { display: block; width: 100%; height: auto; }
+      .timeline-track { height: 6px; background: rgba(243,236,217,.18); margin: 12px 16px 16px; border-radius: 3px; overflow: hidden; }
+      .timeline-fill { height: 100%; width: 0%; background: var(--gold-bright); border-radius: 3px; }
+
+      .tiles { display: grid; gap: 12px; margin-top: 16px; }
+      @media (min-width: 620px) { .tiles { grid-template-columns: 1fr 1fr; } }
+      .tile {
+        background: var(--surface); border: 1.5px solid var(--line); border-radius: 14px; padding: 16px 20px;
+      }
+      .tile .tlabel { font-size: .85rem; font-weight: 600; color: var(--ink-soft); }
+      .tile .tvalue { font-family: "Noto Serif SC", Georgia, serif; font-weight: 600; font-size: 1.75rem; line-height: 1.15; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+      .tile .tfrom { font-size: .9rem; color: var(--ink-soft); }
+      .tile .tbadge {
+        display: none; margin-top: 8px; font-size: .82rem; font-weight: 600;
+        padding: 8px 12px; border-radius: 8px; line-height: 1.4;
+      }
+      .tile.done { border-color: var(--good); }
+      .tile.done .tbadge { display: block; background: var(--surface-2); color: var(--good); }
+      .tile.locked { border-color: var(--seal); }
+      .tile.locked .tvalue { color: var(--ink-soft); }
+      .tile.locked .tbadge { display: block; background: var(--seal-soft); color: var(--seal); }
+      .run-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+      .run-row .btn { flex: 1 1 180px; font-size: 1.05rem; }
+
+      /* ---------- verdict ---------- */
+      .verdict {
+        display: none; margin-top: 16px; border-radius: 14px; padding: 20px;
+        background: var(--surface); border: 1.5px solid var(--gold); box-shadow: var(--shadow);
+      }
+      .verdict.show { display: block; }
+      .verdict h3 { font-family: "Noto Serif SC", Georgia, serif; font-size: 1.4rem; font-weight: 600; }
+      .verdict .score { font-weight: 600; color: var(--gold-text); }
+
+      /* ---------- method / timeline / sources ---------- */
+      .methods { counter-reset: m; display: grid; gap: 12px; margin-top: 8px; }
+      .method {
+        display: flex; gap: 12px; background: var(--surface); border: 1px solid var(--line);
+        border-radius: 12px; padding: 16px; align-items: baseline;
+      }
+      .method::before {
+        counter-increment: m; content: counter(m);
+        flex: none; font-family: "Noto Serif SC", Georgia, serif; font-weight: 600; color: var(--gold-text); font-size: 1.15rem;
+      }
+      .tl { display: grid; gap: 0; margin-top: 6px; }
+      .tl-item { display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px dashed var(--line); }
+      .tl-item:last-child { border-bottom: 0; }
+      .tl-year { flex: none; width: 88px; font-family: "Noto Serif SC", Georgia, serif; font-weight: 600; color: var(--seal); font-variant-numeric: tabular-nums; }
+      .stat-band {
+        margin-top: 40px; background: var(--green-deep); color: var(--green-ink);
+        border-radius: 16px; padding: 24px; text-align: center;
+      }
+      .stat-band .n { font-family: "Noto Serif SC", Georgia, serif; font-size: 2rem; font-weight: 600; color: var(--gold-bright); line-height: 1.1; font-variant-numeric: tabular-nums; }
+      .sources { font-size: .88rem; color: var(--ink-soft); }
+      .sources li { margin-bottom: 6px; }
+      footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); font-size: .85rem; color: var(--ink-soft); }
+      :focus-visible { outline: 3px solid var(--gold-bright); outline-offset: 2px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+
+      <header class="hero">
+        <figure class="hero-plate"><img src="sez-signing-plate.webp" alt="Engraving of the eighteen Xiaogang farmers signing the secret contract by oil lamp, winter 1978" width="1440" height="480" fetchpriority="high"></figure>
+        <div class="place-line">Xiaogang village · Shenzhen · 1978–2024</div>
+        <h1>Run your own SEZ</h1>
+        <p class="claim">In 1978 a Chinese farmer asked: <strong>“Do I own the teeth in my head?”</strong> The answer was no — even his teeth belonged to the collective.</p>
+        <p>Deng Xiaoping’s answer wasn’t to change the whole country. It was to fence off one small place, change only its rules, and let the result do the arguing. This page lets you run that experiment yourself — first in a village, then in a city — with the real numbers history recorded.</p>
+        <div class="hero-stats">
+          <span><b>18</b> farmers, one secret contract</span>
+          <span><b>1</b> fenced city across from Hong Kong</span>
+          <span><b>44</b> years, 1980 → 2024</span>
+        </div>
+        <a class="btn btn-gold" href="#step1">Start the experiment</a>
+      </header>
+
+      <section aria-labelledby="mirror-h">
+        <h2 id="mirror-h">The same experiment, run twice</h2>
+        <p class="soft">A village and a city, two years apart. Same land, same tools, same people — only the rules changed.</p>
+        <div class="mirror">
+          <article class="card">
+            <div class="when">Winter 1978 · Xiaogang village</div>
+            <div class="big">The secret contract</div>
+            <p>18 farmers signed by oil lamp in a mud hut, knowing it could get them executed. One called it “like high voltage wire — touch it and you die.” The contract was hidden inside bamboo in a roof. The village had already lost 67 of its 120 people to hunger in 1958–60.</p>
+            <div class="clause">The clause they wrote in: if any of them was imprisoned or executed for this, the rest would raise his children until they turned 18.</div>
+          </article>
+          <article class="card">
+            <div class="when">26 Aug 1980 · The special economic zones</div>
+            <div class="big">The fenced city</div>
+            <p>Four zones were approved on one day: Shenzhen, Zhuhai, Shantou and Xiamen. Shenzhen sat directly across from Hong Kong, and admission was initially fenced off and selective — a small place where different rules could be tested before anyone bet the country on them.</p>
+            <div class="clause gold">The push came from Guangdong officials asking for “special policies and flexible measures.” Deng approved.</div>
+          </article>
+        </div>
+        <blockquote>
+          <p>“Work hard, don’t work hard — everyone gets the same. So people don’t want to work.”</p>
+          <cite>— Yen Jingchang, Xiaogang farmer, on life before the contract (NPR, 2012). Before, farmers only went out when the village whistle blew. After, families were in the fields before dawn, secretly competing.</cite>
+        </blockquote>
+      </section>
+
+      <section id="step1" aria-labelledby="step1-h">
+        <span class="step-tag">Step 1 of 3</span>
+        <h2 id="step1-h">Pick your fenced zone</h2>
+        <p class="soft">All four were approved on 26 August 1980. The counters in Step 3 track Shenzhen — it’s the zone the film follows, and the one with the complete 1980 → 2024 record used here.</p>
+        <div class="zones" role="group" aria-label="Choose a zone">
+          <button type="button" class="zone" data-zone="shenzhen" aria-pressed="true">
+            <span class="zname">Shenzhen</span>
+            <span class="zsub">Directly across from Hong Kong. The benchmark run, tracked to 2024.</span>
+          </button>
+          <button type="button" class="zone" data-zone="zhuhai" aria-pressed="false">
+            <span class="zname">Zhuhai</span>
+            <span class="zsub">One of the four original zones, approved the same day.</span>
+          </button>
+          <button type="button" class="zone" data-zone="shantou" aria-pressed="false">
+            <span class="zname">Shantou</span>
+            <span class="zsub">One of the four original zones, approved the same day.</span>
+          </button>
+          <button type="button" class="zone" data-zone="xiamen" aria-pressed="false">
+            <span class="zname">Xiamen</span>
+            <span class="zsub">One of the four original zones, approved the same day.</span>
+          </button>
+        </div>
+      </section>
+
+      <section id="step2" aria-labelledby="step2-h">
+        <span class="step-tag">Step 2 of 3</span>
+        <h2 id="step2-h">Set the rules</h2>
+        <p class="soft">Four decisions. Each one is a real lever from the Xiaogang contract or the zone policies — and each one unlocks a specific result in Step 3. The experiment starts on the 1978 settings.</p>
+
+        <div class="rule" data-rule="land">
+          <div class="rule-head"><span class="rule-num">1</span><h3>Who works the land?</h3></div>
+          <div class="rule-opts" role="group" aria-label="Who works the land">
+            <button type="button" class="opt" data-value="collective" aria-pressed="true">
+              <span class="otag">1978 rules</span>
+              <span class="otitle">The collective farms it</span>
+              <span class="osub">Everyone works the same fields together — and only when the whistle blows.</span>
+            </button>
+            <button type="button" class="opt" data-value="family" aria-pressed="false">
+              <span class="otag">The contract</span>
+              <span class="otitle">Divide it among families</span>
+              <span class="osub">The Xiaogang contract’s first term: split the land, each family farms its own plot and hands a share to the state and collective.</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="rule" data-rule="keep">
+          <div class="rule-head"><span class="rule-num">2</span><h3>Who keeps the harvest?</h3></div>
+          <div class="rule-opts" role="group" aria-label="Who keeps the harvest">
+            <button type="button" class="opt" data-value="same" aria-pressed="true">
+              <span class="otag">1978 rules</span>
+              <span class="otitle">Same share for everyone</span>
+              <span class="osub">Work hard or don’t — the share is identical. Yen Jingchang’s complaint, word for word.</span>
+            </button>
+            <button type="button" class="opt" data-value="surplus" aria-pressed="false">
+              <span class="otag">The contract</span>
+              <span class="otitle">Families keep the surplus</span>
+              <span class="osub">Grow more than the quota, keep the extra. Effort finally pays the person who made it.</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="rule" data-rule="money">
+          <div class="rule-head"><span class="rule-num">3</span><h3>Can outside money come in?</h3></div>
+          <div class="rule-opts" role="group" aria-label="Can outside money come in">
+            <button type="button" class="opt" data-value="closed" aria-pressed="true">
+              <span class="otag">1978 rules</span>
+              <span class="otitle">Closed</span>
+              <span class="osub">No foreign factories, no outside investment. The zone builds only with what it already has.</span>
+            </button>
+            <button type="button" class="opt" data-value="open" aria-pressed="false">
+              <span class="otag">The zone policy</span>
+              <span class="otitle">Open to foreign investment</span>
+              <span class="osub">“Special policies and flexible measures” — Hong Kong and foreign money can build factories inside the fence.</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="rule" data-rule="gates">
+          <div class="rule-head"><span class="rule-num">4</span><h3>Can people move in?</h3></div>
+          <div class="rule-opts" role="group" aria-label="Can people move in">
+            <button type="button" class="opt" data-value="shut" aria-pressed="true">
+              <span class="otag">1978 rules</span>
+              <span class="otitle">The fence stays shut</span>
+              <span class="osub">Admission was fenced and selective at the start — keep it that way, and nobody new arrives.</span>
+            </button>
+            <button type="button" class="opt" data-value="open" aria-pressed="false">
+              <span class="otag">The zone policy</span>
+              <span class="otitle">Open the gates</span>
+              <span class="osub">Workers and builders from the rest of China can come in and stay. A city needs people.</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="preset-row">
+          <button type="button" class="btn btn-soft" id="btn-deng">Use Deng’s settings</button>
+          <button type="button" class="btn btn-ghost" id="btn-reset-rules">Back to 1978 rules</button>
+        </div>
+      </section>
+
+      <section id="step3" aria-labelledby="step3-h">
+        <span class="step-tag">Step 3 of 3</span>
+        <h2 id="step3-h">Run the experiment</h2>
+        <p class="soft">Phase one runs Xiaogang, 1978 → 1979. Phase two runs your zone, 1980 → 2024. A result only lands if the rule that powered it in real life is switched on — otherwise it stalls at its recorded starting number.</p>
+
+        <div class="stage" aria-hidden="true">
+          <div class="stage-head">
+            <span class="phase" id="phase-label">Ready — Xiaogang village, before the contract</span>
+            <span class="year" id="year-label">1978</span>
+          </div>
+          <svg id="scene" viewBox="0 0 720 300" role="img" aria-label="Illustration of a farm village on the left growing into a city skyline on the right">
+            <rect x="0" y="0" width="720" height="300" fill="#0f2c1c"/>
+            <circle id="sun" cx="620" cy="52" r="24" fill="#eec95e" opacity="0.9"/>
+            <rect x="0" y="238" width="720" height="62" fill="#0a1f13"/>
+            <g id="field"></g>
+            <g id="hut">
+              <rect x="52" y="196" width="74" height="44" fill="#274435"/>
+              <polygon points="44,198 89,168 134,198" fill="#3a5a41"/>
+              <rect x="80" y="214" width="16" height="26" fill="#eec95e" opacity="0.85"/>
+            </g>
+            <g id="skyline"></g>
+            <rect id="fence" x="10" y="10" width="700" height="280" fill="none" stroke="#d9a92b" stroke-width="2.5" stroke-dasharray="10 8" opacity="0.85"/>
+            <rect id="gate" x="330" y="282" width="60" height="10" fill="#0f2c1c"/>
+          </svg>
+          <div class="timeline-track"><div class="timeline-fill" id="timeline-fill"></div></div>
+        </div>
+
+        <div class="tiles">
+          <div class="tile" id="tile-grain">
+            <div class="tlabel">Grain harvest · Xiaogang, 1979</div>
+            <div class="tvalue" id="val-grain">≈15,000 kg</div>
+            <div class="tfrom">the year before, implied by the 6× jump</div>
+            <div class="tbadge" id="badge-grain"></div>
+          </div>
+          <div class="tile" id="tile-income">
+            <div class="tlabel">Income per person · Xiaogang</div>
+            <div class="tvalue" id="val-income">¥22</div>
+            <div class="tfrom">per person, per year</div>
+            <div class="tbadge" id="badge-income"></div>
+          </div>
+          <div class="tile" id="tile-gdp">
+            <div class="tlabel">GDP · Shenzhen</div>
+            <div class="tvalue" id="val-gdp">¥270M</div>
+            <div class="tfrom">1980 → 2024</div>
+            <div class="tbadge" id="badge-gdp"></div>
+          </div>
+          <div class="tile" id="tile-people">
+            <div class="tlabel">Population · Shenzhen</div>
+            <div class="tvalue" id="val-people">330,000</div>
+            <div class="tfrom">1980 → today</div>
+            <div class="tbadge" id="badge-people"></div>
+          </div>
+        </div>
+
+        <div class="run-row">
+          <button type="button" class="btn btn-gold" id="btn-run">Run it — 1978 → 2024</button>
+        </div>
+
+        <div class="verdict" id="verdict" role="status">
+          <div class="score" id="verdict-score"></div>
+          <h3 id="verdict-title"></h3>
+          <p id="verdict-body"></p>
+          <p class="small soft" id="verdict-history"></p>
+        </div>
+      </section>
+
+      <section aria-labelledby="method-h">
+        <h2 id="method-h">The method: feeling the stones</h2>
+        <p>Deng named his own approach late: <span class="serif"><strong>“crossing the river by feeling the stones.”</strong></span> Test small, copy what works. Historian Ezra Vogel distilled the playbook into five moves:</p>
+        <div class="methods">
+          <div class="method">Experiment in SEZs before scaling anything nationwide.</div>
+          <div class="method">Cross the river by feeling the stones — small steps, checked as you go.</div>
+          <div class="method">Send students abroad to learn.</div>
+          <div class="method">Learn from Singapore and Japan.</div>
+          <div class="method">Let numbers, not ideology, settle arguments.</div>
+        </div>
+      </section>
+
+      <section aria-labelledby="tl-h">
+        <h2 id="tl-h">What actually happened</h2>
+        <div class="tl">
+          <div class="tl-item"><div class="tl-year">1978</div><div>Winter. 18 Xiaogang farmers sign the secret contract by oil lamp and hide it in bamboo in a roof.</div></div>
+          <div class="tl-item"><div class="tl-year">1979</div><div>The harvest gives them away: 90,000 kg of grain, over 6× the year before. Income per person goes ¥22 → ¥400. Yen Hongchang is hauled into the Party office like a man on death row — Deng holds the farmers up as a model instead.</div></div>
+          <div class="tl-item"><div class="tl-year">1980</div><div>26 August: Shenzhen, Zhuhai, Shantou and Xiamen approved as Special Economic Zones. Shenzhen starts at ¥270 million GDP and about 330,000 people.</div></div>
+          <div class="tl-item"><div class="tl-year">1992</div><div>Deng, aged 87, tours Shenzhen on his Southern Tour and reignites reform.</div></div>
+          <div class="tl-item"><div class="tl-year">2024</div><div>Shenzhen’s GDP reaches ¥3.68 trillion — roughly 13,600× its 1980 level — and it is now China’s third-largest city economy, at about $560 billion slightly bigger than Vietnam’s.</div></div>
+        </div>
+        <div class="stat-band">
+          <div class="n">500 million</div>
+          <p style="margin:0;">people have risen out of poverty in China since 1978. <span style="color:#cfd6c4;">(NPR)</span></p>
+        </div>
+      </section>
+
+      <section aria-labelledby="src-h">
+        <h2 id="src-h">Sources &amp; notes</h2>
+        <ul class="sources">
+          <li>Xiaogang story, the contract and its clause, the teeth question, the whistle, the harvest and income figures: NPR, “The Secret Document That Transformed China,” 20 Jan 2012.</li>
+          <li>Grain: 90,000 kg in 1979, over 6× the previous year — so the “year before” figure shown here (≈15,000 kg) is the arithmetic implied by that 6×, not a separately recorded total.</li>
+          <li>Shenzhen GDP: ¥270 million (1980) → ¥3.68 trillion (2024). One source prints ¥2.7 billion for 1980; this page uses ¥270 million, the figure the film uses.</li>
+          <li>Shenzhen population: about 330,000 in 1980 → 17–18 million today; this page shows 17 million, matching the film.</li>
+          <li>Stalled tiles are deliberate: they stop at the recorded starting numbers. History never ran those rule mixes, so this page doesn’t invent end numbers for them.</li>
+          <li>The Xiaogang contract is now held by the Da Baogan Commemorative Museum, and the story is taught in Chinese schools.</li>
+        </ul>
+      </section>
+
+      <footer>
+        Companion page to the film “How China Became Capitalist.” Same land, same tools, same people — only the rules changed.
+      </footer>
+
+    </div>
+
+    <script>
+      (function () {
+        "use strict";
+        var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        var state = {
+          zone: "shenzhen",
+          zoneName: "Shenzhen",
+          rules: { land: "collective", keep: "same", money: "closed", gates: "shut" },
+          ran: false,
+          running: false
+        };
+        var REFORM = { land: "family", keep: "surplus", money: "open", gates: "open" };
+        var ZONE_NAMES = { shenzhen: "Shenzhen", zhuhai: "Zhuhai", shantou: "Shantou", xiamen: "Xiamen" };
+
+        /* ---------- build the scene ---------- */
+        var skyline = document.getElementById("skyline");
+        var field = document.getElementById("field");
+        var NS = "http://www.w3.org/2000/svg";
+        function el(name, attrs) {
+          var n = document.createElementNS(NS, name);
+          for (var k in attrs) n.setAttribute(k, attrs[k]);
+          return n;
+        }
+        // deterministic building plan: [x, width, fullHeight, windowsPerRow]
+        var plan = [
+          [388, 34, 96], [428, 28, 128], [462, 38, 76], [506, 30, 152],
+          [542, 26, 104], [574, 40, 178], [620, 30, 120], [656, 36, 146]
+        ];
+        var buildings = [];
+        plan.forEach(function (b, bi) {
+          var g = el("g", {});
+          var h = b[2];
+          var rect = el("rect", { x: b[0], y: 240 - h, width: b[1], height: h, fill: bi % 2 ? "#224733" : "#1b3828" });
+          g.appendChild(rect);
+          var wins = [];
+          var cols = Math.max(2, Math.floor(b[1] / 11));
+          var rows = Math.max(3, Math.floor(h / 17));
+          for (var r = 0; r < rows; r++) {
+            for (var c = 0; c < cols; c++) {
+              if ((r * 7 + c * 3 + bi) % 3 === 0) continue;
+              var w = el("rect", {
+                x: b[0] + 5 + c * 11, y: 240 - h + 8 + r * 17, width: 6, height: 8,
+                fill: "#eec95e", opacity: "0"
+              });
+              wins.push(w); g.appendChild(w);
+            }
+          }
+          g.style.transformOrigin = b[0] + "px 240px";
+          g.style.transform = "scaleY(0.06)";
+          skyline.appendChild(g);
+          buildings.push({ g: g, wins: wins });
+        });
+        // grain stalks
+        var stalks = [];
+        for (var s = 0; s < 9; s++) {
+          var x = 168 + s * 22;
+          var st = el("g", {});
+          st.appendChild(el("path", { d: "M" + x + " 244 L" + x + " 208", stroke: "#c9a83b", "stroke-width": "3", fill: "none" }));
+          st.appendChild(el("ellipse", { cx: x, cy: 202, rx: 5, ry: 10, fill: "#d9a92b" }));
+          st.appendChild(el("ellipse", { cx: x - 6, cy: 212, rx: 4, ry: 8, fill: "#c9a83b", transform: "rotate(-24 " + (x - 6) + " 212)" }));
+          st.appendChild(el("ellipse", { cx: x + 6, cy: 212, rx: 4, ry: 8, fill: "#c9a83b", transform: "rotate(24 " + (x + 6) + " 212)" }));
+          st.style.transformOrigin = x + "px 244px";
+          st.style.transform = "scaleY(0.25)";
+          field.appendChild(st);
+          stalks.push(st);
+        }
+        var gateEl = document.getElementById("gate");
+        var fenceEl = document.getElementById("fence");
+
+        function setField(p) { // p 0..1
+          stalks.forEach(function (st, i) {
+            var v = Math.max(0.12, Math.min(1, p * 1.3 - i * 0.03));
+            st.style.transform = "scaleY(" + v.toFixed(3) + ")";
+          });
+        }
+        function setCity(p) {
+          buildings.forEach(function (b, i) {
+            var v = Math.max(0.05, Math.min(1, p * 1.25 - i * 0.045));
+            b.g.style.transform = "scaleY(" + v.toFixed(3) + ")";
+            var lit = Math.floor(b.wins.length * Math.max(0, v - 0.25) * 1.3);
+            b.wins.forEach(function (w, wi) { w.setAttribute("opacity", wi < lit ? "0.95" : "0"); });
+          });
+          gateEl.setAttribute("opacity", state.rules.gates === "open" ? "1" : "0");
+          fenceEl.setAttribute("opacity", state.rules.gates === "open" ? "0.45" : "0.85");
+        }
+
+        /* ---------- pickers ---------- */
+        function pressGroup(container, btn) {
+          var btns = container.querySelectorAll("button");
+          btns.forEach(function (b) { b.setAttribute("aria-pressed", b === btn ? "true" : "false"); });
+        }
+        document.querySelectorAll(".zone").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            pressGroup(btn.parentElement, btn);
+            state.zone = btn.getAttribute("data-zone");
+            state.zoneName = ZONE_NAMES[state.zone];
+            invalidate();
+          });
+        });
+        document.querySelectorAll(".rule").forEach(function (ruleEl) {
+          var key = ruleEl.getAttribute("data-rule");
+          ruleEl.querySelectorAll(".opt").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              pressGroup(ruleEl.querySelector(".rule-opts"), btn);
+              state.rules[key] = btn.getAttribute("data-value");
+              invalidate();
+            });
+          });
+        });
+        function setRule(key, value) {
+          state.rules[key] = value;
+          var ruleEl = document.querySelector('.rule[data-rule="' + key + '"]');
+          ruleEl.querySelectorAll(".opt").forEach(function (b) {
+            b.setAttribute("aria-pressed", b.getAttribute("data-value") === value ? "true" : "false");
+          });
+        }
+        document.getElementById("btn-deng").addEventListener("click", function () {
+          Object.keys(REFORM).forEach(function (k) { setRule(k, REFORM[k]); });
+          invalidate();
+        });
+        document.getElementById("btn-reset-rules").addEventListener("click", function () {
+          setRule("land", "collective"); setRule("keep", "same");
+          setRule("money", "closed"); setRule("gates", "shut");
+          invalidate();
+        });
+
+        /* ---------- results model ---------- */
+        function outcomes() {
+          var r = state.rules;
+          return {
+            grain: { ok: r.land === "family" && r.keep === "surplus",
+              blockedBy: r.land !== "family" && r.keep !== "surplus"
+                ? "Blocked: the land is still collective and the share is still the same for everyone."
+                : (r.land !== "family" ? "Blocked: the land is still farmed collectively." : "Blocked: everyone still gets the same share, work or not.") },
+            income: { ok: r.keep === "surplus",
+              blockedBy: "Blocked: everyone still gets the same share, work or not — the incentive never switches on." },
+            gdp: { ok: r.money === "open",
+              blockedBy: "Blocked: outside money is still shut out, so no factories arrive." },
+            people: { ok: r.gates === "open",
+              blockedBy: "Blocked: the gates stay shut, so the builders and workers never come." }
+          };
+        }
+
+        /* ---------- counters ---------- */
+        function fmtInt(n) { return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+        function fmtGdp(v) {
+          if (v >= 1e12) return "¥" + (v / 1e12).toFixed(2) + "T";
+          if (v >= 1e9) return "¥" + (v / 1e9).toFixed(2) + "B";
+          return "¥" + Math.round(v / 1e6) + "M";
+        }
+        function fmtPeople(v) {
+          if (v >= 1e6) { var m = v / 1e6; return (m >= 16.95 ? "17M" : m.toFixed(1).replace(/\.0$/, "") + "M"); }
+          return fmtInt(v);
+        }
+        var els = {
+          phase: document.getElementById("phase-label"),
+          year: document.getElementById("year-label"),
+          fill: document.getElementById("timeline-fill"),
+          grain: document.getElementById("val-grain"),
+          income: document.getElementById("val-income"),
+          gdp: document.getElementById("val-gdp"),
+          people: document.getElementById("val-people")
+        };
+        var BASE = { grain: 15000, income: 22, gdp: 270e6, people: 330000 };
+        var FINAL = { grain: 90000, income: 400, gdp: 3.68e12, people: 17e6 };
+        var GDP_MULT = FINAL.gdp / BASE.gdp;
+
+        function drawCounters(pA, pB, oc) {
+          // village phase progress pA applies to grain/income (cap low when blocked)
+          var gP = oc.grain.ok ? pA : Math.min(pA, 0.12);
+          var iP = oc.income.ok ? pA : Math.min(pA, 0.12);
+          els.grain.textContent = (pA >= 1 && oc.grain.ok) ? "90,000 kg" : "≈" + fmtInt(BASE.grain + (FINAL.grain - BASE.grain) * gP) + " kg";
+          els.income.textContent = "¥" + fmtInt(BASE.income + (FINAL.income - BASE.income) * iP);
+          // city phase
+          var dP = oc.gdp.ok ? pB : Math.min(pB, 0.05);
+          var pP = oc.people.ok ? pB : Math.min(pB, 0.05);
+          var gdpVal = BASE.gdp * Math.pow(GDP_MULT, dP);
+          els.gdp.textContent = (pB >= 1 && oc.gdp.ok) ? "¥3.68T" : fmtGdp(gdpVal);
+          els.people.textContent = (pB >= 1 && oc.people.ok) ? "17M" : fmtPeople(BASE.people + (FINAL.people - BASE.people) * pP);
+        }
+        function setTile(id, ok, badgeText) {
+          var tile = document.getElementById("tile-" + id);
+          var badge = document.getElementById("badge-" + id);
+          tile.classList.remove("done", "locked");
+          if (ok === null) { badge.textContent = ""; return; }
+          tile.classList.add(ok ? "done" : "locked");
+          badge.textContent = badgeText;
+        }
+        function resetTiles() {
+          ["grain", "income", "gdp", "people"].forEach(function (id) { setTile(id, null, ""); });
+          els.grain.textContent = "≈15,000 kg";
+          els.income.textContent = "¥22";
+          els.gdp.textContent = "¥270M";
+          els.people.textContent = "330,000";
+          els.year.textContent = "1978";
+          els.phase.textContent = "Ready — Xiaogang village, before the contract";
+          els.fill.style.width = "0%";
+          setField(0); setCity(0);
+        }
+        function invalidate() {
+          if (state.running) return;
+          if (state.ran) { state.ran = false; resetTiles(); document.getElementById("verdict").classList.remove("show"); }
+          setCity(0); setField(0);
+        }
+
+        /* ---------- run ---------- */
+        var runBtn = document.getElementById("btn-run");
+        function ease(t) { return 1 - Math.pow(1 - t, 3); }
+        function finish(oc) {
+          state.running = false; state.ran = true;
+          runBtn.disabled = false;
+          runBtn.textContent = "Run it again";
+          setTile("grain", oc.grain.ok, oc.grain.ok ? "Landed: 90,000 kg — over 6× the year before." : oc.grain.blockedBy);
+          setTile("income", oc.income.ok, oc.income.ok ? "Landed: ¥22 → ¥400 per person in one year." : oc.income.blockedBy);
+          setTile("gdp", oc.gdp.ok, oc.gdp.ok ? "Landed: ¥270M → ¥3.68T by 2024 — about 13,600×." : oc.gdp.blockedBy);
+          setTile("people", oc.people.ok, oc.people.ok ? "Landed: 330,000 → 17 million people." : oc.people.blockedBy);
+          if (!oc.grain.ok) els.grain.textContent = "≈15,000 kg";
+          if (!oc.income.ok) els.income.textContent = "¥22";
+          if (!oc.gdp.ok) els.gdp.textContent = "¥270M";
+          if (!oc.people.ok) els.people.textContent = "330,000";
+          showVerdict(oc);
+        }
+        function showVerdict(oc) {
+          var count = [oc.grain.ok, oc.income.ok, oc.gdp.ok, oc.people.ok].filter(Boolean).length;
+          var v = document.getElementById("verdict");
+          document.getElementById("verdict-score").textContent = count + " of 4 results landed · Your zone: " + state.zoneName;
+          var title, body;
+          if (count === 4) {
+            title = "You matched history.";
+            body = "Same land, same tools, same people — only the rules changed, and everything changed. Xiaogang’s harvest hit 90,000 kg at over 6× the year before, income jumped ¥22 → ¥400, and your zone ran Shenzhen’s recorded course: ¥270 million to ¥3.68 trillion, 330,000 people to 17 million. When the huge harvest gave Xiaogang away, Deng didn’t punish the farmers — he held them up as the model. That’s the whole trick: the result did the arguing.";
+          } else if (count >= 2) {
+            title = "The experiment half-ran.";
+            body = "Part of the machine switched on and part stayed stuck in 1978 — the stalled tiles above name the rule still holding each number down. That’s exactly why Deng fenced the test off: inside a small zone you can see which single rule is the brake, fix it, and run again. Flip the blocked rules and re-run.";
+          } else if (count === 1) {
+            title = "One spark, no fire.";
+            body = "A single reform on its own couldn’t carry a village or a city. In 1978 the levers worked as a set: land in family hands, the surplus worth growing, outside money allowed in, and people free to come. The stalled tiles above show what each missing rule cost.";
+          } else {
+            title = "Nothing changed — so nothing changed.";
+            body = "You ran the 1978 rules and got the 1978 result: the whistle, the same share for everyone, and fields nobody rushed to before dawn. Yen Jingchang said it plainly: work hard, don’t work hard, everyone gets the same — so people don’t want to work. Change one rule above and run it again.";
+          }
+          document.getElementById("verdict-title").textContent = title;
+          document.getElementById("verdict-body").textContent = body;
+          document.getElementById("verdict-history").textContent =
+            "What history actually ran: family plots + keep the surplus in Xiaogang (1978), then open money + open gates in the zones (1980). Every landed number on this page is the recorded one; stalled tiles keep their recorded starting numbers.";
+          v.classList.add("show");
+          v.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "nearest" });
+        }
+
+        runBtn.addEventListener("click", function () {
+          if (state.running) return;
+          var oc = outcomes();
+          document.getElementById("verdict").classList.remove("show");
+          ["grain", "income", "gdp", "people"].forEach(function (id) { setTile(id, null, ""); });
+          if (reduced) {
+            els.phase.textContent = "1980 → 2024 · " + state.zoneName;
+            els.year.textContent = "2024";
+            els.fill.style.width = "100%";
+            drawCounters(1, 1, oc);
+            setField(oc.grain.ok ? 1 : 0.1);
+            setCity((oc.gdp.ok || oc.people.ok) ? 1 : 0.05);
+            finish(oc);
+            return;
+          }
+          state.running = true;
+          runBtn.disabled = true;
+          runBtn.textContent = "Running…";
+          var PHASE_A = 1500, PHASE_B = 3400;
+          var start = null;
+          function frame(ts) {
+            if (!start) start = ts;
+            var t = ts - start;
+            if (t < PHASE_A) {
+              var pA = ease(t / PHASE_A);
+              els.phase.textContent = "Phase 1 · Xiaogang village — the contract year";
+              els.year.textContent = String(Math.round(1978 + pA));
+              els.fill.style.width = (pA * 30) + "%";
+              drawCounters(pA, 0, oc);
+              setField(oc.grain.ok ? pA : Math.min(pA, 0.15));
+              setCity(0);
+            } else {
+              var pB = ease(Math.min(1, (t - PHASE_A) / PHASE_B));
+              els.phase.textContent = "Phase 2 · " + state.zoneName + " — inside the fence";
+              els.year.textContent = String(Math.round(1980 + pB * 44));
+              els.fill.style.width = (30 + pB * 70) + "%";
+              drawCounters(1, pB, oc);
+              setField(oc.grain.ok ? 1 : 0.1);
+              var cityP = (oc.gdp.ok && oc.people.ok) ? pB : (oc.gdp.ok || oc.people.ok) ? pB * 0.55 : Math.min(pB, 0.06);
+              setCity(cityP);
+              if (t >= PHASE_A + PHASE_B) {
+                els.year.textContent = "2024";
+                finish(oc);
+                return;
+              }
+            }
+            requestAnimationFrame(frame);
+          }
+          requestAnimationFrame(frame);
+        });
+
+        setField(0); setCity(0);
+      })();
+    </script>
+  </body>
+</html>
