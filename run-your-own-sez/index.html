@@ -228,6 +228,7 @@
       .verdict.show { display: block; }
       .verdict h3 { font-family: "Noto Serif SC", Georgia, serif; font-size: 1.4rem; font-weight: 600; }
       .verdict .score { font-weight: 600; color: var(--gold-text); }
+      .verdict .btn { margin-top: 16px; }
 
       /* ---------- method / timeline / sources ---------- */
       .methods { counter-reset: m; display: grid; gap: 12px; margin-top: 8px; }
@@ -456,6 +457,7 @@
           <h3 id="verdict-title"></h3>
           <p id="verdict-body"></p>
           <p class="small soft" id="verdict-history"></p>
+          <a class="btn btn-soft" id="btn-share" href="https://warpcast.com/~/compose" target="_blank" rel="noopener">Share result on Farcaster</a>
         </div>
       </section>
 
@@ -749,6 +751,11 @@
           document.getElementById("verdict-body").textContent = body;
           document.getElementById("verdict-history").textContent =
             "What history actually ran: family plots + keep the surplus in Xiaogang (1978), then open money + open gates in the zones (1980). Every landed number on this page is the recorded one; stalled tiles keep their recorded starting numbers.";
+          var shareLine = count === 4
+            ? "I ran Deng's experiment and matched history: grain 90,000 kg (6×), income ¥22 → ¥400, Shenzhen ¥270M → ¥3.68T, 330,000 to 17M people."
+            : "I ran Deng's experiment: " + count + " of 4 results landed in " + state.zoneName + ".";
+          document.getElementById("btn-share").href =
+            "https://warpcast.com/~/compose?text=" + encodeURIComponent(shareLine + " Run it yourself: https://georgeonweb3.github.io/run-your-own-sez/");
           v.classList.add("show");
           v.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "nearest" });
         }
