@@ -673,6 +673,23 @@ function startGame(promptText, seedNum) {
     return { x: W * 0.15, y: H * 0.15 };
   }
 
+  // Starting enemies spawn ON the arena edges, well away from the player
+  // at the centre, so nothing converges on the player from the first frame.
+  function edgePos() {
+    var minDist = Math.min(W, H) * 0.45;
+    for (var tries = 0; tries < 80; tries++) {
+      var edge = Math.floor(rng() * 4);
+      var m = 44 + rng() * 30; // 44-74px in from the chosen wall
+      var x, y;
+      if (edge === 0) { x = 50 + rng() * (W - 100); y = m; }
+      else if (edge === 1) { x = 50 + rng() * (W - 100); y = H - m; }
+      else if (edge === 2) { x = m; y = 50 + rng() * (H - 100); }
+      else { x = W - m; y = 50 + rng() * (H - 100); }
+      if (Math.hypot(x - player.x, y - player.y) >= minDist) return { x: x, y: y };
+    }
+    return { x: W - 60, y: 60 };
+  }
+
   // Hazard first, then chest away from both.
   var hz = farPos(190, 64);
   var hazard = { x: hz.x, y: hz.y, r: 62 + rng() * 14, type: theme.hazard, spin: rng() * 6.28, tickT: 0 };
@@ -690,8 +707,8 @@ function startGame(promptText, seedNum) {
 
   // Enemies: chasers, shooters, a tank — plus a boss if the prompt asked.
   var enemies = [];
-  function addEnemy(type) {
-    var p = farPos(200, 20);
+  function addEnemy(type, atEdge) {
+    var p = atEdge ? edgePos() : farPos(200, 20);
     var base = {
       chaser:  { r: 19, hp: 2, speed: 100, score: 100 },
       shooter: { r: 19, hp: 3, speed: 84,  score: 150 },
@@ -708,9 +725,9 @@ function startGame(promptText, seedNum) {
   // Balance: exactly 5 enemies at the start. Two more trickle in later,
   // one after the 2nd kill and one after the 4th (see update()).
   var i;
-  for (i = 0; i < 3; i++) addEnemy("chaser");
-  addEnemy("shooter");
-  if (rules.boss) addEnemy("boss"); else addEnemy("tank");
+  for (i = 0; i < 3; i++) addEnemy("chaser", true);
+  addEnemy("shooter", true);
+  if (rules.boss) addEnemy("boss", true); else addEnemy("tank", true);
   var trickle = ["chaser", "shooter"];
 
   // Floor decoration, seeded per theme.
@@ -910,6 +927,11 @@ function loop(ts) {
 function update(dt) {
   var p = G.player, rules = G.rules, theme = G.theme;
   G.elapsed += dt;
+  /* Opening balance for every floor: a 3-second grace period (enemies
+     frozen, no enemy damage possible), then enemy speed is halved until
+     5 seconds and ramps back to full speed by 7 seconds. */
+  var inGrace = G.elapsed < 3;
+  var spdF = inGrace ? 0 : (G.elapsed < 5 ? 0.5 : (G.elapsed < 7 ? 0.5 + (G.elapsed - 5) * 0.25 : 1));
   p.invuln = Math.max(0, p.invuln - dt);
   p.fireT = Math.max(0, p.fireT - dt);
   p.dashCd = Math.max(0, p.dashCd - dt);
@@ -1041,28 +1063,31 @@ function update(dt) {
       e.flash = Math.max(0, e.flash - dt);
       e.wob += dt * 3;
       e.touchCd = Math.max(0, (e.touchCd || 0) - dt);
+      e.kbT = Math.max(0, (e.kbT || 0) - dt);
       e.spawnT = Math.max(0, (e.spawnT || 0) - dt);
       var dx = p.x - e.x, dy = p.y - e.y, dist = Math.hypot(dx, dy) || 1;
       var ux = dx / dist, uy = dy / dist;
-      if (e.type === "chaser" || e.type === "tank" || e.type === "boss") {
-        e.x += ux * e.speed * dt; e.y += uy * e.speed * dt;
-      } else if (e.type === "shooter") {
-        var want = 260;
-        if (dist > want + 30) { e.x += ux * e.speed * dt; e.y += uy * e.speed * dt; }
-        else if (dist < want - 50) { e.x -= ux * e.speed * dt; e.y -= uy * e.speed * dt; }
-        e.x += -uy * e.strafe * 26 * dt; e.y += ux * e.strafe * 26 * dt;
+      if ((e.kbT || 0) <= 0) { // a knocked-back enemy pauses before it can chase again
+        if (e.type === "chaser" || e.type === "tank" || e.type === "boss") {
+          e.x += ux * e.speed * spdF * dt; e.y += uy * e.speed * spdF * dt;
+        } else if (e.type === "shooter") {
+          var want = 260;
+          if (dist > want + 30) { e.x += ux * e.speed * spdF * dt; e.y += uy * e.speed * spdF * dt; }
+          else if (dist < want - 50) { e.x -= ux * e.speed * spdF * dt; e.y -= uy * e.speed * spdF * dt; }
+          e.x += -uy * e.strafe * 26 * spdF * dt; e.y += ux * e.strafe * 26 * spdF * dt;
+        }
       }
       e.x = Math.max(e.r + 4, Math.min(W - e.r - 4, e.x));
       e.y = Math.max(e.r + 4, Math.min(H - e.r - 4, e.y));
 
-      // shooting
-      e.fireT -= dt;
-      if (e.type === "shooter" && e.fireT <= 0 && dist < 430) {
+      // shooting — frozen solid during the grace period
+      if (!inGrace) e.fireT -= dt;
+      if (e.type === "shooter" && !inGrace && e.fireT <= 0 && dist < 430) {
         e.fireT = 1.8 + Math.random() * 0.9;
         G.ebullets.push({ x: e.x + ux * (e.r + 4), y: e.y + uy * (e.r + 4), vx: ux * 188, vy: uy * 188, r: 5 });
         sfx.eshoot();
       }
-      if (e.type === "boss") {
+      if (e.type === "boss" && !inGrace) {
         e.burstT -= dt;
         if (e.burstT <= 0) {
           e.burstT = 2.4;
@@ -1080,9 +1105,15 @@ function update(dt) {
 
       // contact: 1-second damage cooldown per enemy, so a swarm
       // touching you cannot melt you in a single frame stack.
-      if (dist < e.r + p.r - 2 && e.touchCd <= 0 && p.invuln <= 0) {
+      if (!inGrace && dist < e.r + p.r - 2 && e.touchCd <= 0 && p.invuln <= 0) {
         e.touchCd = 1.0;
         hurtPlayer(e.x, e.y);
+        // Knockback: shove the enemy away from the player and pause it
+        // briefly, so it cannot sit on the player and drain hearts.
+        e.x -= ux * 58; e.y -= uy * 58;
+        e.x = Math.max(e.r + 4, Math.min(W - e.r - 4, e.x));
+        e.y = Math.max(e.r + 4, Math.min(H - e.r - 4, e.y));
+        e.kbT = 0.45;
       }
     });
 
@@ -1110,7 +1141,7 @@ function update(dt) {
       var q = G.ebullets[qi];
       q.x += q.vx * dt; q.y += q.vy * dt;
       if (q.x < 4 || q.x > W - 4 || q.y < 4 || q.y > H - 4) { G.ebullets.splice(qi, 1); continue; }
-      if (Math.hypot(q.x - p.x, q.y - p.y) < q.r + p.r - 2) { G.ebullets.splice(qi, 1); hurtPlayer(q.x - q.vx * 0.1, q.y - q.vy * 0.1); }
+      if (!inGrace && Math.hypot(q.x - p.x, q.y - p.y) < q.r + p.r - 2) { G.ebullets.splice(qi, 1); hurtPlayer(q.x - q.vx * 0.1, q.y - q.vy * 0.1); }
     }
 
     /* --- coins: magnet toward the player within 110px --- */
@@ -1316,6 +1347,31 @@ function draw() {
     vg.addColorStop(0, "rgba(200,30,40,0)");
     vg.addColorStop(1, "rgba(200,30,40," + (G.hurtFlash * 0.75) + ")");
     ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+  }
+  // Grace period countdown: enemies are frozen, the player gets room to
+  // breathe — say so, big and centred, with the safe window draining.
+  if (G.elapsed < 3) {
+    var remain = 3 - G.elapsed;
+    var count = Math.ceil(remain);
+    ctx.save();
+    ctx.fillStyle = "rgba(4,6,10,0.38)";
+    ctx.fillRect(0, 0, W, H);
+    ctx.textAlign = "center";
+    ctx.font = "900 34px system-ui, sans-serif";
+    ctx.lineWidth = 6; ctx.strokeStyle = "rgba(0,0,0,0.8)";
+    ctx.strokeText("Get ready...", W / 2, H / 2 - 58);
+    ctx.fillStyle = "#ffd94d";
+    ctx.fillText("Get ready...", W / 2, H / 2 - 58);
+    ctx.font = "900 120px system-ui, sans-serif";
+    ctx.lineWidth = 10;
+    ctx.strokeText(String(count), W / 2, H / 2 + 62);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(String(count), W / 2, H / 2 + 62);
+    ctx.fillStyle = "rgba(255,255,255,0.25)";
+    ctx.fillRect(W / 2 - 110, H / 2 + 88, 220, 8);
+    ctx.fillStyle = "#35d0ba";
+    ctx.fillRect(W / 2 - 110, H / 2 + 88, 220 * (remain / 3), 8);
+    ctx.restore();
   }
 }
 
